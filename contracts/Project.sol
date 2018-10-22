@@ -63,10 +63,8 @@ contract Project {
   address public owner;
   string public description;
   
-  /**
-   * goal, maxInvest, minInvest 单位都为 wei
-   * 投资人在参与众筹时输入的投资资金单位也为 wei 故不需要与 ether 做单位换算
-   */
+  // goal, maxInvest, minInvest 单位都为 wei
+  // 投资人在参与众筹时输入的投资资金单位也为 wei 故不需要与 ether 做单位换算
   uint public goal;
   uint public minInvest;
   uint public maxInvest;
@@ -81,14 +79,7 @@ contract Project {
     _;
   }
 
-  /**
-   * 初始化需要项目名称 融资上下限、融资金额以及投资人
-   *
-   * @param {string} _description 项目名称
-   * @param {uint} _minInvest 投资下限
-   * @param {uint} _maxInvest 投资上限
-   * @param {address} _owner 投资人
-   */
+  /// 初始化需要项目名称 融资上下限、融资金额以及投资人
   constructor(
     string _description,
     uint _minInvest,
@@ -108,11 +99,9 @@ contract Project {
   }
 
 
-  /**
-   * 投资人参与众筹，需要发送满足投资条件的投资资金（大于投资下限，小于投资上限）
-   * 智能合约会将投资人记录在投资人列表中，并更新项目的资金余额
-   * 项目投资金额大于众筹目标金额时，将不再接受投资
-   */
+  /// 投资人参与众筹，需要发送满足投资条件的投资资金（大于投资下限，小于投资上限）
+  /// 智能合约会将投资人记录在投资人列表中，并更新项目的资金余额
+  /// 项目投资金额大于众筹目标金额时，将不再接受投资
   function contribute() public payable {
     // msg.value 为投资人参与众筹时的投资金额，单位 wei
     // msg.sender 为投资人
@@ -131,13 +120,7 @@ contract Project {
     }
   }
 
-  /**
-   * 项目发起人发起资金支出请求，要求传入资金支出的细节信息
-   *
-   * @param {string} _description 资金用途
-   * @param {uint} _amount 支出金额
-   * @param {address} _reveiver 收款方
-   */
+  /// 项目发起人发起资金支出请求，要求传入资金支出的细节信息
   function createPayment(string _description, uint _amount, address _receiver) ownerOnly public {
     Payment memory newPayment = Payment({
       description: _description,
@@ -150,11 +133,7 @@ contract Project {
     payments.push(newPayment);
   }
 
-  /**
-   * 投资人投票赞成某一个资金支出请求，需要指定是哪条请求，要求投票的人是投资人，并且检查重复投票情况；
-   *
-   * @param {uint} index 存在于资金支出请求数组中的某一个支出请求的索引
-   */
+  /// 投资人投票赞成某一个资金支出请求，需要指定是哪条请求，要求投票的人是投资人，并且检查重复投票情况；
   function approvePayment(uint index) public {
     Payment storage payment = payments[index];
 
@@ -167,12 +146,8 @@ contract Project {
     payment.voterCount += 1;
   }
 
-  /**
-   * 完成资金支出，需要指定是哪笔支出，即调用该接口给资金接收方转账，不能重复转账
-   * 并且赞成票数超过投资人数量的 50%
-   *
-   * @param {uint} index 存在于资金支出请求数组中的某一个支出请求的索引
-   */
+  /// 完成资金支出，需要指定是哪笔支出，即调用该接口给资金接收方转账，不能重复转账
+  /// 并且赞成票数超过投资人数量的 50%
   function finishPayment(uint index) ownerOnly public {
     Payment storage payment = payments[index];
 
