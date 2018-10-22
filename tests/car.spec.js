@@ -1,5 +1,5 @@
-// 合约部署时传入的 brand 属性被正确的存储
-// 调用 setBrand 时确保 brand 属性被正确的更新
+// TODO: 合约部署时传入的 brand 属性被正确的存储
+// TODO: 调用 setBrand 时确保 brand 属性被正确的更新
 
 const path = require("path");
 const assert = require("assert");
