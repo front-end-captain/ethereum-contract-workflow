@@ -18,7 +18,7 @@ let accounts;
 let result;
 let initialBrand = "AUDI";
 
-describe("contract", () => {
+describe("Car contract", () => {
   beforeEach(async () => {
     accounts = await web3.eth.getAccounts();
     console.log("合约部署账户", accounts[0]);

@@ -69,7 +69,7 @@ contract Project {
   uint public minInvest;
   uint public maxInvest;
   uint public investorCount;
-  mapping(address => uint) investors;
+  mapping(address => uint) public investors;
 
   // 资金支出列表
   Payment[] public payments;
