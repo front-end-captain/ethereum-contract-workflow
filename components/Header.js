@@ -40,7 +40,7 @@ class Header extends React.Component {
         <div className={classes.wrapper}>
           <Toolbar className={classes.toolbar}>
             <Typography variant="title" color="inherit" className={classes.brand}>
-              众筹 DApp
+              crowdfunding DApp
             </Typography>
             <span className={classes.flexContainer}>
               <a href="/" className={classes.anchor}>
