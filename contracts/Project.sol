@@ -36,11 +36,13 @@ contract ProjectList {
 
   address[] public projects;
 
+  /// 创建项目
   function createProject(string _description, uint _minInvest, uint _maxInvest, uint _goal) public {
     address newProject = new Project(_description, _minInvest, _maxInvest, _goal, msg.sender);
     projects.push(newProject);
   }
 
+  /// 获取项目列表
   function getProjects() public view returns(address[]) {
     return projects;
   }
@@ -158,6 +160,7 @@ contract Project {
     payment.completed = true;
   }
 
+  /// 获取项目的概览信息
   function getSummary() public view returns (string, uint, uint, uint, uint, uint, uint, address) {
     return (
       description,

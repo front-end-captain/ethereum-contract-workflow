@@ -2,7 +2,7 @@
 
 ## 众筹智能合约
 
-> 智能合约管理的基本数据单元是项目，指资金募集方可以创建和管理供投资者可以参与的项目，而项目需要具备基本属性，也需要存储项目生命周期中的各种数据。实战中会使用 Project 来命名项目智能合约。
+> 智能合约管理的基本数据单元是项目，指资金募集方可以创建和管理供投资者可以参与的项目，而项目需要具备基本属性，也需要存储项目生命周期中的各种数据。实战中会使用 *Project* 来命名项目智能合约。
 
 ### 数据结构
 
@@ -21,13 +21,118 @@
 
 ### 状态流转
 
-— **创建项目** 创建项目时需要指定项目名称，基本投资规则，自动记录项目的所有者；
++ **创建项目**  创建项目时需要指定项目名称，基本投资规则（投资上下限，融资目标），自动记录项目的所有者；
+
+  ``` solidity
+  ProjectList.createProject(string description, uint minInvest, uint maxInvest, uint goal)
+  ```
 
 - **参与众筹** 参与的含义是投资人选定某个项目，并向智能合约转账，智能合约会把投资人记录在投资人列表中，并更新项目的资金余额；
-- **创建资金支出条目** 项目所有者有权限在项目上发起资金支出请求，需要提供资金用途、支出金额、收款方，默认为未完成状态，创建资金支出条目前需要检查资金余额是否充足；
+
+  ``` solidity
+  Project.contribute();
+  ```
+
+- **创建资金支出请求** 项目所有者有权限在项目上发起资金支出请求，需要提供资金用途、支出金额、收款方，默认为未完成状态，创建资金支出条目前需要检查资金余额是否充足；
+
+  ``` solidity
+  Project.createPayment(string description, uint amount, address receiver);
+  ```
+
 - **给资金支出条目投票** 投资人看到新的资金支出请求之后会选择投赞成票还是反对票，投票过程需要被如实记录，为了简化，我们只记录赞成票；
+
+  ``` solidity
+  Project.approvePayment(uint index);
+  ```
+
 - **完成资金支出** 项目所有者在资金支出请求达到超过半数投资人投赞成票的条件时才有权进行此操作，操作结果是直接把对应的金额转给收款方，转账前也要进行余额检查；
+
+  ``` solidity
+  Project.finishPayment(uint index);
+  ```
+
++ **获取项目的概览信息** 项目名称，投资下限，投资上限，融资目标金额，账户余额(已募集资金)，参与投资人数，资金支出请求数量，项目发起人
+
+  ``` solidity
+  Project.getProjectSummary() returns (string description, uint, minInvest, uint maxInvest, uint goal, uint balance, uint investCount, uint paymentAmount, address owner);
+  ```
 
 ## 众筹 DApp
 ### 路由规划
+
+| URL                                | 描述                 |
+| ---------------------------------- | -------------------- |
+| /                                  | 首页，即项目列表页   |
+| /projects/create                   | 项目创建页面         |
+| /projects/:address                 | 项目详情页面         |
+| /projects/:address/payments/create | 创建资金支出请求页面 |
+
+### API
+
+#### 获取项目列表
+
+``` javascript
+/**
+ * @returns {array} projectList: Array<string> 包含项目合约地址的数组
+ */
+getProjectList();
+```
+
+#### 获取某一个项目的概览信息
+
+``` javascript
+/**
+ * @returns {object} {description: string, minInvest: number, maxInvest: number, goal: number, balance: number, investCount: number, paymentAmount: number, owner: string }
+ */
+getProjectSummary(address: string);
+```
+
+#### 创建项目
+
+``` javascript
+/**
+ * 创建项目
+ * @param {string} description 项目名称
+ * @param {number} minInvest 投资下限
+ * @param {number} maxInvest 投资上限
+ * @param {number} goal 融资目标
+ */
+createProject(description: string, minInvest: number, maxInvest: number, goal: number);
+```
+
+#### 创建资金支出请求
+
+``` javascript
+/**
+ * @param {string} description 资金用途
+ * @param {number} amount 请求支出金额
+ * @param {number} receiver 收款人
+ * NOTE: 检查创建请求的用户是否是项目管理员
+ */
+createPayment(description: string, amnount: number, receiver: string);
+```
+
+#### 获取资金支出列表
+
+``` javascript
+/**
+ * @returns {array} paymentList: Array<{ description: string, amount: number, receiver: string, completed: bool, voterCount: number }>
+ * 支出理由(description) 支出金额(amount) 收款人(receiver) 是否完成(completed) 已投票(voterCount)
+ * 已投票 = voterCount / invertorCount
+ */
+getPaymentList();
+```
+
+#### 投票
+
+``` javascript
+// NOTE: 检查投票人是不是投资人，只有投资人才可以投票
+approvePayment(number paymentIndex);
+```
+
+#### 完成资金划转
+
+``` javascript
+finishPayment(number paymentIndex);
+```
 
