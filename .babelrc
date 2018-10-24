@@ -1,0 +1,14 @@
+{
+  "presets": [
+    "@babel/preset-react"
+  ],
+  "plugins": [
+    "react-hot-loader/babel",
+    "@babel/plugin-syntax-dynamic-import",
+    ["import", {
+      "libraryName": "antd",
+      "libraryDirectory": "es",
+      "style": "css"
+    }]
+  ]
+}
