@@ -11,3 +11,4 @@ const createProjectContractInstance = (address) => {
 };
 
 export default createProjectContractInstance;
+export { createProjectContractInstance };

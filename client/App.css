@@ -4,3 +4,9 @@ html {
   height: 100%;
   background-color: #ffffff;
 }
+
+.app-wrapper {
+  width: 60%;
+  height: auto;
+  margin: 0 auto;
+}

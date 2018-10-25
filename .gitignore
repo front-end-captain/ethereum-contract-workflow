@@ -21,6 +21,7 @@ address.json
 .env.production.local
 .vscode
 .next
+.idea
 
 npm-debug.log*
 yarn-debug.log*

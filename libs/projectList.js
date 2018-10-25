@@ -11,3 +11,4 @@ const createProjectListContractInstance = () => {
 };
 
 export default createProjectListContractInstance;
+export { createProjectListContractInstance }
