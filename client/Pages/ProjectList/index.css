@@ -3,3 +3,7 @@
   align-items: center;
   justify-content: center;
 }
+
+.project-list-wrapper .ant-form-item-control-wrapper {
+  width: 100%;
+}

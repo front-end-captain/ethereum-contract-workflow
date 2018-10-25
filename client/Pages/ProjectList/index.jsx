@@ -1,10 +1,13 @@
 import React, { Component } from "react";
 import { Link } from "react-router-dom";
-import { Card, Row, Col, Spin } from "antd";
+import { Card, Row, Col, Spin, Form, Input, Button } from "antd";
 import { createProjectListContractInstance } from "./../../../libs/projectList";
 import { createProjectContractInstance } from "./../../../libs/project.js";
 import { convertWeiToEther } from "./../../../libs/utils.js";
+
 import "./index.css";
+
+const FormItem = Form.Item;
 
 class ProjectList extends Component {
   constructor(props) {
@@ -17,6 +20,8 @@ class ProjectList extends Component {
     };
 
     this.projectListContractInstance = createProjectListContractInstance();
+    this.checkInvestAmount = this.checkInvestAmount.bind(this);
+    this.confirmInvest = this.confirmInvest.bind(this);
   }
   async getProjects() {
     this.setState({ loading: true });
@@ -59,8 +64,59 @@ class ProjectList extends Component {
     this.setState({ projects });
   }
 
+  checkInvestAmount(rule, value, callback) {
+    if (!value) {
+      callback("数量不能为空");
+    }
+    const investAmount = Number(value);
+
+    if (Number.isNaN(investAmount)) {
+      callback("请输入有效数量");
+    }
+
+    if (investAmount === 0) {
+      callback("数量不能为0");
+    }
+
+    callback();
+  }
+
+  confirmInvest(address) {
+    const {
+      form: { validateFields, setFields, getFieldsValue },
+    } = this.props;
+    const { projects } = this.state;
+    const { minInvest, maxInvest } = projects.find((project) => project.address === address);
+    const minInvestToEther = Number(convertWeiToEther(minInvest));
+    const maxInvestToEther = Number(convertWeiToEther(maxInvest));
+    let { investAmount } = getFieldsValue(["investAmount"]);
+    investAmount = Number(investAmount);
+    if (investAmount < minInvestToEther) {
+      setFields({
+        investAmount: { value: investAmount, errors: [new Error("投资数量不能小于最小投资数量")] },
+      });
+      return;
+    }
+    if (investAmount > maxInvestToEther) {
+      setFields({
+        investAmount: { value: investAmount, errors: [new Error("投资数量不能大于最小投资数量")] },
+      });
+      return;
+    }
+
+    validateFields((error, fieldValues) => {
+      if (error) {
+        return;
+      }
+      console.log(fieldValues);
+    });
+  }
+
   render() {
     const { projects, loading } = this.state;
+    const {
+      form: { getFieldDecorator },
+    } = this.props;
     if (loading) {
       return (
         <div className="project-list-loading-container">
@@ -72,12 +128,7 @@ class ProjectList extends Component {
       <div className="project-list-wrapper">
         {projects.map((project) => {
           return (
-            <Card
-              key={project.address}
-              title={project.description}
-              bordered={false}
-              actions={[<Link to={`/projects/${project.address}`}>查看详情</Link>]}
-            >
+            <Card key={project.address} title={project.description} bordered={false}>
               <Row gutter={16}>
                 <Col span={5}>
                   <Card bordered={false} hoverable={true} title="融资目标">
@@ -106,6 +157,20 @@ class ProjectList extends Component {
                   </Card>
                 </Col>
               </Row>
+              <div className="invest-action">
+                <Row gutter={16}>
+                  <Col span={10}>
+                    <FormItem wrapperCol={{ span: 10 }}>
+                      {getFieldDecorator("investAmount", {
+                        rules: [{ validator: this.checkInvestAmount }],
+                      })(<Input placeholder="请输入投资数量" addonAfter="ETH" />)}
+                    </FormItem>
+                  </Col>
+                  <Col span={3}>
+                    <Button onClick={() => this.confirmInvest(project.address)}>确定</Button>
+                  </Col>
+                </Row>
+              </div>
             </Card>
           );
         })}
@@ -114,4 +179,4 @@ class ProjectList extends Component {
   }
 }
 
-export default ProjectList;
+export default Form.create()(ProjectList);
