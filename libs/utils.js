@@ -4,4 +4,8 @@ const convertWeiToEther = (value) => {
   return web3.utils.fromWei(value, 'ether');
 };
 
-export { convertWeiToEther };
+const convertEtherToWei = (value) => {
+  return web3.utils.toWei(value, 'ether');
+};
+
+export { convertWeiToEther, convertEtherToWei };
