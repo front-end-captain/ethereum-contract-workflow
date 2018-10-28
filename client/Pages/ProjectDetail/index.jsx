@@ -1,10 +1,11 @@
-import React, { Component } from "react";
-import { Card, Button, Row, Col, Form, Input, Spin, message } from "antd";
-import { convertWeiToEther, convertEtherToWei } from "./../../../libs/utils.js";
-import { createProjectContractInstance } from "./../../../libs/project.js";
-import web3 from "./../../../libs/web3.js";
+import React, { Component } from 'react';
+import { Card, Button, Row, Col, Form, Input, Spin, message } from 'antd';
+import { convertWeiToEther, convertEtherToWei } from './../../../libs/utils.js';
+import { createProjectContractInstance } from './../../../libs/project.js';
+import web3 from './../../../libs/web3.js';
+import Payments from './../Payments/index.jsx';
 
-import "./index.css";
+import './index.css';
 
 const FormItem = Form.Item;
 
@@ -19,6 +20,7 @@ class ProjectDetail extends Component {
     };
 
     this.projectContractInstance = null;
+    this.projectAddress = props.match.params.address;
 
     this.checkInvestAmount = this.checkInvestAmount.bind(this);
     this.confirmInvest = this.confirmInvest.bind(this);
@@ -26,32 +28,26 @@ class ProjectDetail extends Component {
     this.refreshProjectDetail = this.refreshProjectDetail.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
+
   async componentDidMount() {
-    const {
-      match: {
-        params: { address },
-      },
-      history,
-    } = this.props;
-    if (!address) {
-      history.push("/");
+    if (!this.projectAddress) {
+      history.push('/');
     }
-    this.projectContractInstance = createProjectContractInstance(address);
+    this.projectContractInstance = createProjectContractInstance(
+      this.projectAddress,
+    );
     const projectDetail = await this.getProjectDetail();
     this.setState({ projectDetail, loading: false });
   }
+
   async refreshProjectDetail() {
     const projectDetail = await this.getProjectDetail();
     this.setState({ projectDetail, loading: false });
   }
+
   async getProjectDetail() {
     this.setState({ loading: true });
-    const {
-      match: {
-        params: { address },
-      },
-    } = this.props;
-    const summary = await createProjectContractInstance(address)
+    const summary = await  this.projectContractInstance
       .methods.getSummary()
       .call();
 
@@ -65,6 +61,15 @@ class ProjectDetail extends Component {
       paymentCount,
       owner,
     ] = Object.values(summary);
+    const tasks = [];
+    for (let i = 0; i < paymentCount; i++) {
+      tasks.push(
+        this.projectContractInstance
+          .methods.payments(i)
+          .call(),
+      );
+    }
+    const payments = await Promise.all(tasks);
     return {
       description,
       minInvest,
@@ -74,20 +79,22 @@ class ProjectDetail extends Component {
       investorCount,
       paymentCount,
       owner,
+      payments,
     };
   }
+
   checkInvestAmount(_, value, callback) {
     if (!value) {
-      callback("数量不能为空");
+      callback('数量不能为空');
     }
     const investAmount = Number(value);
 
     if (Number.isNaN(investAmount)) {
-      callback("请输入有效数量");
+      callback('请输入有效数量');
     }
 
     if (investAmount === 0) {
-      callback("数量不能为0");
+      callback('数量不能为0');
     }
 
     callback();
@@ -101,17 +108,23 @@ class ProjectDetail extends Component {
     const { minInvest, maxInvest } = project;
     const minInvestToEther = Number(convertWeiToEther(minInvest));
     const maxInvestToEther = Number(convertWeiToEther(maxInvest));
-    let { investAmount } = getFieldsValue(["investAmount"]);
+    let { investAmount } = getFieldsValue(['investAmount']);
     investAmount = Number(investAmount);
     if (investAmount < minInvestToEther) {
       setFields({
-        investAmount: { value: investAmount, errors: [new Error("投资数量不能小于最小投资数量")] },
+        investAmount: {
+          value: investAmount,
+          errors: [new Error('投资数量不能小于最小投资数量')],
+        },
       });
       return;
     }
     if (investAmount > maxInvestToEther) {
       setFields({
-        investAmount: { value: investAmount, errors: [new Error("投资数量不能大于最小投资数量")] },
+        investAmount: {
+          value: investAmount,
+          errors: [new Error('投资数量不能大于最小投资数量')],
+        },
       });
       return;
     }
@@ -135,15 +148,19 @@ class ProjectDetail extends Component {
 
     try {
       result = await this.projectContractInstance.methods
-      .contribute()
-      .send({ from: owner, value: convertEtherToWei(investAmount), gas: 5000000 });
+        .contribute()
+        .send({
+          from: owner,
+          value: convertEtherToWei(investAmount),
+          gas: 5000000,
+        });
 
       if (result.status) {
         this.refreshProjectDetail();
       }
     } catch (error) {
       console.dir(error);
-      message.error(error.message || "unknown error");
+      message.error(error.message || 'unknown error');
       this.setState({ submitting: false });
       return;
     }
@@ -154,21 +171,19 @@ class ProjectDetail extends Component {
   render() {
     const {
       form: { getFieldDecorator },
-      match: {
-        params: { address },
-      },
+      history,
     } = this.props;
     const { projectDetail: project, loading, submitting } = this.state;
-    if (loading || typeof loading === "object") {
+    if (loading || typeof loading === 'object') {
       return (
         <div className="project-detail">
-          <Spin />
+          <Spin size="large" />
         </div>
       );
     }
     return (
       <div className="project-detail">
-        <Card key={address} title={project.description} bordered={false}>
+        <Card title={project.description} bordered={false}>
           <Row gutter={16}>
             <Col span={5}>
               <Card bordered={false} hoverable={true} title="融资目标">
@@ -201,17 +216,33 @@ class ProjectDetail extends Component {
             <Row gutter={16}>
               <Col span={10}>
                 <FormItem wrapperCol={{ span: 10 }}>
-                  {getFieldDecorator("investAmount", {
+                  {getFieldDecorator('investAmount', {
                     rules: [{ validator: this.checkInvestAmount }],
                   })(<Input placeholder="请输入投资数量" addonAfter="ETH" />)}
                 </FormItem>
               </Col>
               <Col span={2}>
-                <Button onClick={this.confirmInvest} loading={submitting}>确定</Button>
+                <Button
+                  type="primary"
+                  onClick={this.confirmInvest}
+                  loading={submitting}
+                >
+                  确定
+                </Button>
               </Col>
             </Row>
           </div>
         </Card>
+        <Payments
+          payments={project.payments}
+          loading={loading}
+          address={this.projectAddress}
+          history={history}
+          balance={project.balance}
+          investorCount={project.investorCount}
+          refreshAction={this.refreshProjectDetail}
+          owner={project.owner}
+        />
       </div>
     );
   }

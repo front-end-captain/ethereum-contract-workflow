@@ -12,6 +12,7 @@ address.json
 # production
 /build
 /dll
+/compiled
 
 # misc
 .DS_Store

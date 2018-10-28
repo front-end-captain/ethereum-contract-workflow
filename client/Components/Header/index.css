@@ -18,10 +18,11 @@
   flex-direction: row;
   align-items: center; 
 }
-.header .header-container .title-container h1 {
+.header .header-container .title-container a {
+  font-size: 30px;
   margin: 0;
 }
-.header .header-container .title-container a {
+.header .header-container .title-container span a {
   font-size: 20px;
   color: mediumslateblue;
 }
