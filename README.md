@@ -109,7 +109,7 @@ createProject(description: string, minInvest: number, maxInvest: number, goal: n
  * @param {number} receiver 收款人
  * NOTE: 检查创建请求的用户是否是项目管理员
  */
-createPayment(description: string, amnount: number, receiver: string);
+createPayment(description: string, amount: number, receiver: string);
 ```
 
 #### 获取资金支出列表

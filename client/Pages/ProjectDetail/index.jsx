@@ -15,7 +15,7 @@ class ProjectDetail extends Component {
 
     this.state = {
       projectDetail: {},
-      loading: null,
+      fetchingProjectDetail: null,
       submitting: null,
     };
 
@@ -35,16 +35,16 @@ class ProjectDetail extends Component {
     }
     this.projectContractInstance = createProjectContractInstance(this.projectAddress);
     const projectDetail = await this.getProjectDetail();
-    this.setState({ projectDetail, loading: false });
+    this.setState({ projectDetail, fetchingProjectDetail: false });
   }
 
   async refreshProjectDetail() {
     const projectDetail = await this.getProjectDetail();
-    this.setState({ projectDetail, loading: false });
+    this.setState({ projectDetail, fetchingProjectDetail: false });
   }
 
   async getProjectDetail() {
-    this.setState({ loading: true });
+    this.setState({ fetchingProjectDetail: true });
     const summary = await this.projectContractInstance.methods.getSummary().call();
 
     const [
@@ -144,15 +144,14 @@ class ProjectDetail extends Component {
         value: convertEtherToWei(investAmount),
         gas: 5000000,
       });
-
-      if (result && result.status) {
-        this.refreshProjectDetail();
-      }
     } catch (error) {
       console.dir(error);
       message.error(error.message || "unknown error");
     } finally {
       this.setState({ submitting: false });
+      if (result && result.status) {
+        this.refreshProjectDetail();
+      }
     }
   }
 
@@ -161,8 +160,8 @@ class ProjectDetail extends Component {
       form: { getFieldDecorator },
       history,
     } = this.props;
-    const { projectDetail: project, loading, submitting } = this.state;
-    if (loading || typeof loading === "object") {
+    const { projectDetail: project, fetchingProjectDetail, submitting } = this.state;
+    if (fetchingProjectDetail || typeof fetchingProjectDetail === "object") {
       return (
         <div className="project-detail">
           <Spin size="large" />
@@ -210,7 +209,7 @@ class ProjectDetail extends Component {
                 </FormItem>
               </Col>
               <Col span={2}>
-                <Button type="primary" onClick={this.confirmInvest} loading={submitting}>
+                <Button type="primary" onClick={this.confirmInvest} fetchingProjectDetail={submitting}>
                   确定
                 </Button>
               </Col>
@@ -219,13 +218,13 @@ class ProjectDetail extends Component {
         </Card>
         <Payments
           payments={project.payments}
-          loading={loading}
-          address={this.projectAddress}
-          history={history}
           balance={project.balance}
           investorCount={project.investorCount}
-          refreshAction={this.refreshProjectDetail}
           owner={project.owner}
+          fetchingProjectDetail={fetchingProjectDetail}
+          address={this.projectAddress}
+          history={history}
+          refreshAction={this.refreshProjectDetail}
         />
       </div>
     );

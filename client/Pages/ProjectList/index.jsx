@@ -12,15 +12,21 @@ class ProjectList extends Component {
 
     this.state = {
       addressList: [],
-      projects: [],
-      loading: false,
+      projectsList: [],
+      fetchingProjectsList: false,
     };
 
     this.projectListContractInstance = createProjectListContractInstance();
     this.jumpToProjectDetail = this.jumpToProjectDetail.bind(this);
   }
+
+  async componentDidMount() {
+    const projectsList = await this.getProjects();
+    this.setState({ projectsList });
+  }
+
   async getProjects() {
-    this.setState({ loading: true });
+    this.setState({ fetchingProjectsList: true });
     const addressList = await this.projectListContractInstance.methods.getProjects().call();
     const summaryList = await Promise.all(
       addressList.map((address) => {
@@ -29,7 +35,7 @@ class ProjectList extends Component {
           .call();
       }),
     );
-    const projects = addressList.map((address, index) => {
+    const projectsList = addressList.map((address, index) => {
       const [
         description,
         minInvest,
@@ -52,12 +58,8 @@ class ProjectList extends Component {
         owner,
       };
     });
-    this.setState({ loading: false });
-    return projects;
-  }
-  async componentDidMount() {
-    const projects = await this.getProjects();
-    this.setState({ projects });
+    this.setState({ fetchingProjectsList: false });
+    return projectsList;
   }
 
   jumpToProjectDetail(address) {
@@ -66,7 +68,7 @@ class ProjectList extends Component {
   }
 
   render() {
-    const { projects, loading } = this.state;
+    const { projectsList, fetchingProjectsList } = this.state;
     const column = [
       {
         key: "1",
@@ -115,8 +117,8 @@ class ProjectList extends Component {
       <div className="project-list-wrapper">
         <Table
           columns={column}
-          dataSource={projects}
-          loading={loading}
+          dataSource={projectsList}
+          fetchingProjectsList={fetchingProjectsList}
           rowKey="address"
           pagination={false}
         />
