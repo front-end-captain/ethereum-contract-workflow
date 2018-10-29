@@ -1,11 +1,11 @@
-import React, { Component } from 'react';
-import { Card, Button, Row, Col, Form, Input, Spin, message } from 'antd';
-import { convertWeiToEther, convertEtherToWei } from './../../../libs/utils.js';
-import { createProjectContractInstance } from './../../../libs/project.js';
-import web3 from './../../../libs/web3.js';
-import Payments from './../Payments/index.jsx';
+import React, { Component } from "react";
+import { Card, Button, Row, Col, Form, Input, Spin, message } from "antd";
+import { convertWeiToEther, convertEtherToWei } from "./../../../libs/utils.js";
+import { createProjectContractInstance } from "./../../../libs/project.js";
+import web3 from "./../../../libs/web3.js";
+import Payments from "./../Payments/index.jsx";
 
-import './index.css';
+import "./index.css";
 
 const FormItem = Form.Item;
 
@@ -31,11 +31,9 @@ class ProjectDetail extends Component {
 
   async componentDidMount() {
     if (!this.projectAddress) {
-      history.push('/');
+      history.push("/");
     }
-    this.projectContractInstance = createProjectContractInstance(
-      this.projectAddress,
-    );
+    this.projectContractInstance = createProjectContractInstance(this.projectAddress);
     const projectDetail = await this.getProjectDetail();
     this.setState({ projectDetail, loading: false });
   }
@@ -47,9 +45,7 @@ class ProjectDetail extends Component {
 
   async getProjectDetail() {
     this.setState({ loading: true });
-    const summary = await  this.projectContractInstance
-      .methods.getSummary()
-      .call();
+    const summary = await this.projectContractInstance.methods.getSummary().call();
 
     const [
       description,
@@ -63,11 +59,7 @@ class ProjectDetail extends Component {
     ] = Object.values(summary);
     const tasks = [];
     for (let i = 0; i < paymentCount; i++) {
-      tasks.push(
-        this.projectContractInstance
-          .methods.payments(i)
-          .call(),
-      );
+      tasks.push(this.projectContractInstance.methods.payments(i).call());
     }
     const payments = await Promise.all(tasks);
     return {
@@ -85,16 +77,16 @@ class ProjectDetail extends Component {
 
   checkInvestAmount(_, value, callback) {
     if (!value) {
-      callback('数量不能为空');
+      callback("数量不能为空");
     }
     const investAmount = Number(value);
 
     if (Number.isNaN(investAmount)) {
-      callback('请输入有效数量');
+      callback("请输入有效数量");
     }
 
     if (investAmount === 0) {
-      callback('数量不能为0');
+      callback("数量不能为0");
     }
 
     callback();
@@ -108,13 +100,13 @@ class ProjectDetail extends Component {
     const { minInvest, maxInvest } = project;
     const minInvestToEther = Number(convertWeiToEther(minInvest));
     const maxInvestToEther = Number(convertWeiToEther(maxInvest));
-    let { investAmount } = getFieldsValue(['investAmount']);
+    let { investAmount } = getFieldsValue(["investAmount"]);
     investAmount = Number(investAmount);
     if (investAmount < minInvestToEther) {
       setFields({
         investAmount: {
           value: investAmount,
-          errors: [new Error('投资数量不能小于最小投资数量')],
+          errors: [new Error("投资数量不能小于最小投资数量")],
         },
       });
       return;
@@ -123,7 +115,7 @@ class ProjectDetail extends Component {
       setFields({
         investAmount: {
           value: investAmount,
-          errors: [new Error('投资数量不能大于最小投资数量')],
+          errors: [new Error("投资数量不能大于最小投资数量")],
         },
       });
       return;
@@ -147,25 +139,21 @@ class ProjectDetail extends Component {
     let result = null;
 
     try {
-      result = await this.projectContractInstance.methods
-        .contribute()
-        .send({
-          from: owner,
-          value: convertEtherToWei(investAmount),
-          gas: 5000000,
-        });
+      result = await this.projectContractInstance.methods.contribute().send({
+        from: owner,
+        value: convertEtherToWei(investAmount),
+        gas: 5000000,
+      });
 
-      if (result.status) {
+      if (result && result.status) {
         this.refreshProjectDetail();
       }
     } catch (error) {
       console.dir(error);
-      message.error(error.message || 'unknown error');
+      message.error(error.message || "unknown error");
+    } finally {
       this.setState({ submitting: false });
-      return;
     }
-
-    this.setState({ submitting: false });
   }
 
   render() {
@@ -174,7 +162,7 @@ class ProjectDetail extends Component {
       history,
     } = this.props;
     const { projectDetail: project, loading, submitting } = this.state;
-    if (loading || typeof loading === 'object') {
+    if (loading || typeof loading === "object") {
       return (
         <div className="project-detail">
           <Spin size="large" />
@@ -216,17 +204,13 @@ class ProjectDetail extends Component {
             <Row gutter={16}>
               <Col span={10}>
                 <FormItem wrapperCol={{ span: 10 }}>
-                  {getFieldDecorator('investAmount', {
+                  {getFieldDecorator("investAmount", {
                     rules: [{ validator: this.checkInvestAmount }],
                   })(<Input placeholder="请输入投资数量" addonAfter="ETH" />)}
                 </FormItem>
               </Col>
               <Col span={2}>
-                <Button
-                  type="primary"
-                  onClick={this.confirmInvest}
-                  loading={submitting}
-                >
+                <Button type="primary" onClick={this.confirmInvest} loading={submitting}>
                   确定
                 </Button>
               </Col>

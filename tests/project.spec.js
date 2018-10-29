@@ -3,15 +3,19 @@ const Web3 = require("web3");
 const ganache = require("ganache-cli");
 const assert = require("assert");
 const BigNumber = require("bignumber.js");
+const { convertEtherToWei } = require("./../libs/utils.js");
 
 const web3 = new Web3(ganache.provider());
 const ProjectJson = require(path.resolve(__dirname, "../compiled/Project.json"));
 const ProjectListJson = require(path.resolve(__dirname, "../compiled/ProjectList.json"));
 
 const projectDescription = "Ethereum App Tutorial";
-const MAX_INVEST = 1000;
-const MIN_INVEST = 100;
-const GOAL = 1000000;
+// 最大投资金额 10 eth
+const MAX_INVEST = convertEtherToWei("10");
+// 最小投资金额 0.01 eth
+const MIN_INVEST = convertEtherToWei("0.01");
+// 目标融资金额 100 eth
+const GOAL = convertEtherToWei("100");
 let accounts;
 let projectList;
 let project;
@@ -23,8 +27,12 @@ describe("Project contract", () => {
     accounts = await web3.eth.getAccounts();
 
     // TODO: 部署 ProjectList 合约
-    const ProjectListContract = new web3.eth.Contract(JSON.parse(ProjectListJson.interface));
-    const ProjectListTransaction = ProjectListContract.deploy({ data: ProjectListJson.bytecode });
+    const ProjectListContractInstance = new web3.eth.Contract(
+      JSON.parse(ProjectListJson.interface),
+    );
+    const ProjectListTransaction = ProjectListContractInstance.deploy({
+      data: ProjectListJson.bytecode,
+    });
     projectList = await ProjectListTransaction.send({ from: accounts[0], gas: 5000000 });
 
     // TODO: 调用 ProjectList 的 createProject 方法 创建 Project 合约实例
@@ -62,7 +70,7 @@ describe("Project contract", () => {
   it("should allow investor contribute", async () => {
     const investor = accounts[0];
     // NOTE: 这里投资金额应该小于等于 MAX_INVEST
-    const investValue = 200;
+    const investValue = convertEtherToWei("5");
     await project.methods.contribute().send({
       from: investor,
       value: investValue,
@@ -71,10 +79,10 @@ describe("Project contract", () => {
     const minInvest = await project.methods.minInvest().call();
     const maxInvest = await project.methods.maxInvest().call();
     const goal = await project.methods.goal().call();
-    assert.equal(amount, investValue);
-    assert.ok(investValue <= maxInvest);
-    assert.ok(investValue >= minInvest);
-    assert.ok(investValue <= goal);
+    assert.equal(Number(amount), Number(investValue));
+    assert.ok(Number(investValue) <= Number(maxInvest));
+    assert.ok(Number(investValue) >= Number(minInvest));
+    assert.ok(Number(investValue) <= Number(goal));
   });
 
   it("should require minInvest", async () => {
@@ -106,7 +114,7 @@ describe("Project contract", () => {
   it("should allow owner to create payment", async () => {
     const owner = accounts[0];
     const receiver = accounts[2];
-    const expenditure = 100;
+    const expenditure = convertEtherToWei("1");
 
     await project.methods.createPayment("Rent Office", expenditure, receiver).send({
       from: owner,
@@ -125,16 +133,17 @@ describe("Project contract", () => {
     const owner = accounts[0];
     const investor = accounts[1];
     const receiver = accounts[2];
-    const expenditure = 200;
+    const expenditure = convertEtherToWei("1");
+    const investValue = convertEtherToWei("0.1");
 
     const prevBalance = new BigNumber(await web3.eth.getBalance(receiver));
 
     await project.methods.contribute().send({
       from: investor,
-      value: 500,
+      value: investValue,
       gas: 1000000,
     });
-    
+
     await project.methods.createPayment("Rent office", expenditure, receiver).send({
       from: owner,
       gas: 1000000,
@@ -145,12 +154,14 @@ describe("Project contract", () => {
       gas: 1000000,
     });
 
+    const payment = await project.methods.payments(0).call();
+
     await project.methods.finishPayment(0).send({
       from: owner,
       gas: 1000000,
     });
 
-    const payment = await project.methods.payments(0).call();
+    payment = await project.methods.payments(0).call();
     assert.equal(payment.completed, true);
     assert.equal(payment.voterCount, 1);
 

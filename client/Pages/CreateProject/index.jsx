@@ -27,7 +27,6 @@ class CreateProject extends Component {
       form: { validateFields },
     } = this.props;
     validateFields((error, fieldValue) => {
-      
       if (error) {
         return;
       }
@@ -50,23 +49,20 @@ class CreateProject extends Component {
 
     try {
       result = await this.projectListContractInstance.methods
-      .createProject(description, minInvest, maxInvest, goal)
-      .send({
-        from: owner,
-        gas: 5000000,
-      });
+        .createProject(description, minInvest, maxInvest, goal)
+        .send({
+          from: owner,
+          gas: 5000000,
+        });
     } catch (error) {
       console.dir(error);
       message.error(error.message);
+    } finally {
       this.setState({ submitting: false });
-      return;
+      if (result && result.status) {
+        history.push("/");
+      }
     }
-
-    console.log(result);
-    if (result.status) {
-      history.push("/");
-    }
-    this.setState({ submitting: false });
   }
 
   render() {

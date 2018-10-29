@@ -20,8 +20,8 @@ const contract = new web3.eth.Contract(JSON.parse(ProjectListJson.interface), ad
     {
       description: "Ethereum DApp Tutorial",
       minInvest: web3.utils.toWei("0.001", "ether"),
-      maxInvest: web3.utils.toWei("0.1", "ether"),
-      goal: web3.utils.toWei("1", "ether"),
+      maxInvest: web3.utils.toWei("1", "ether"),
+      goal: web3.utils.toWei("10", "ether"),
     },
   ];
   console.log(projects);

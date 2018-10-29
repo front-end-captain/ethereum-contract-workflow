@@ -1,10 +1,10 @@
-import React, { Component } from 'react';
-import { Card, Table, Button, message } from 'antd';
-import { convertWeiToEther } from './../../../libs/utils.js';
-import web3 from './../../../libs/web3.js';
-import { createProjectContractInstance } from './../../../libs/project.js';
+import React, { Component } from "react";
+import { Card, Table, Button, message } from "antd";
+import { convertWeiToEther } from "./../../../libs/utils.js";
+import web3 from "./../../../libs/web3.js";
+import { createProjectContractInstance } from "./../../../libs/project.js";
 
-import './index.css';
+import "./index.css";
 
 class Payments extends Component {
   constructor(props) {
@@ -24,6 +24,10 @@ class Payments extends Component {
 
   jumpToCreatePaymentPage() {
     const { address, history, balance } = this.props;
+    if (balance <= 0) {
+      message.warning("暂时未募集到资金");
+      return;
+    }
     history.push(`/projects/${address}/payments/create`, { balance });
   }
 
@@ -32,11 +36,9 @@ class Payments extends Component {
     this.setState({ approving: true });
     const accounts = await web3.eth.getAccounts();
     const sender = accounts[0];
-    const isInvestor = await this.projectContactInstance.methods
-      .investors(sender)
-      .call();
+    const isInvestor = await this.projectContactInstance.methods.investors(sender).call();
     if (!isInvestor) {
-      message.error('只有投资人才可以投票');
+      message.error("只有投资人才可以投票");
       this.setState({ approving: false });
       return;
     }
@@ -48,12 +50,12 @@ class Payments extends Component {
     } catch (error) {
       console.dir(error);
       message.error(error.message);
+    } finally {
       this.setState({ approving: false });
-      return;
-    }
-    if (result.status) {
-      message.success('投票成功');
-      refreshAction();
+      if (result && result.status) {
+        message.success("投票成功");
+        refreshAction();
+      }
     }
   }
 
@@ -68,16 +70,18 @@ class Payments extends Component {
     }
     let result = null;
     try {
-      result = await this.projectContactInstance.methods.finishPayment(index).send({ from: sender, gas: 5000000 });
-      if (result.status) {
-        message.success("划款成功");
-        refreshAction();
-      }
+      result = await this.projectContactInstance.methods
+        .finishPayment(index)
+        .send({ from: sender, gas: 5000000 });
     } catch (error) {
       console.dir(error);
       message.error(error.message);
     } finally {
       this.setState({ transferring: false });
+      if (result && result.status) {
+        message.success("划款成功");
+        refreshAction();
+      }
     }
   }
 
@@ -86,42 +90,42 @@ class Payments extends Component {
     const { approving, transferring } = this.state;
     const columns = [
       {
-        key: '1',
-        title: '支出理由',
-        dataIndex: 'description',
+        key: "1",
+        title: "支出理由",
+        dataIndex: "description",
       },
       {
-        key: '2',
-        title: '支出金额',
-        dataIndex: 'amount',
+        key: "2",
+        title: "支出金额",
+        dataIndex: "amount",
         render: (amount) => {
           return `${convertWeiToEther(amount)} ETH`;
         },
       },
       {
-        key: '3',
-        title: '收款人',
-        dataIndex: 'receiver',
+        key: "3",
+        title: "收款人",
+        dataIndex: "receiver",
       },
       {
-        key: '4',
-        title: '是否完成',
-        dataIndex: 'completed',
+        key: "4",
+        title: "是否完成",
+        dataIndex: "completed",
         render: (completed) => {
-          return completed ? '是' : '否';
+          return completed ? "是" : "否";
         },
       },
       {
-        key: '5',
-        title: '投票状态',
-        dataIndex: 'voterCount',
+        key: "5",
+        title: "投票状态",
+        dataIndex: "voterCount",
         render: (voterCount) => {
           return `${voterCount}/${investorCount}`;
         },
       },
       {
-        key: '6',
-        title: '操作',
+        key: "6",
+        title: "操作",
         render: (text, record, index) => {
           return (
             <div>
@@ -136,9 +140,7 @@ class Payments extends Component {
               &nbsp; | &nbsp;
               <Button
                 type="dashed"
-                disabled={
-                  Number(record.voterCount) / Number(investorCount) < 0.5
-                }
+                disabled={Number(record.voterCount) / Number(investorCount) < 0.5}
                 onClick={() => this.handleFinishPayment(index)}
                 loading={transferring}
               >
