@@ -66,6 +66,7 @@ class Payments extends Component {
     const sender = accounts[0];
     if (owner !== sender) {
       message.error("只有项目管理员可以进行划款");
+      this.setState({ transferring: false });
       return;
     }
     let result = null;

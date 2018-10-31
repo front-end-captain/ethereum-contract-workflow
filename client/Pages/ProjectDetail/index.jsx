@@ -209,7 +209,7 @@ class ProjectDetail extends Component {
                 </FormItem>
               </Col>
               <Col span={2}>
-                <Button type="primary" onClick={this.confirmInvest} fetchingProjectDetail={submitting}>
+                <Button type="primary" onClick={this.confirmInvest} loading={submitting}>
                   确定
                 </Button>
               </Col>
@@ -221,7 +221,6 @@ class ProjectDetail extends Component {
           balance={project.balance}
           investorCount={project.investorCount}
           owner={project.owner}
-          fetchingProjectDetail={fetchingProjectDetail}
           address={this.projectAddress}
           history={history}
           refreshAction={this.refreshProjectDetail}

@@ -1,13 +1,14 @@
 // TODO: 往 ProjectList 合约中写入示例数据
 const Web3 = require("web3");
+const config = require("config");
 const HDWalletProvider = require("truffle-hdwallet-provider");
 const ProjectListJson = require("../compiled/ProjectList.json");
 const address = require("../address.json");
 
 const web3 = new Web3(
   new HDWalletProvider(
-    "reflect vacuum stairs chair typical leaf squirrel later happy identify toe water",
-    "https://rinkeby.infura.io/v3/4ca5fec194be42278869da6855d2aa9e",
+    config.get("hdwallet"),
+    config.get("infuraUrl"),
   ),
 );
 const contract = new web3.eth.Contract(JSON.parse(ProjectListJson.interface), address);

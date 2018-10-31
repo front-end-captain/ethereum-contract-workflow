@@ -154,14 +154,12 @@ describe("Project contract", () => {
       gas: 1000000,
     });
 
-    const payment = await project.methods.payments(0).call();
-
     await project.methods.finishPayment(0).send({
       from: owner,
       gas: 1000000,
     });
 
-    payment = await project.methods.payments(0).call();
+    const payment = await project.methods.payments(0).call();
     assert.equal(payment.completed, true);
     assert.equal(payment.voterCount, 1);
 

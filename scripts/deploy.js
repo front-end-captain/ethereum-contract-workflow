@@ -1,5 +1,6 @@
 const path = require("path");
 const fs = require("fs-extra");
+const config = require("config");
 const Web3 = require("web3");
 const HDWalletProvider = require("truffle-hdwallet-provider");
 const Chalk = require("chalk");
@@ -11,8 +12,8 @@ const { interface, bytecode } = require(contractPath);
 
 // 2. 配置 provider
 const provider = new HDWalletProvider(
-  "reflect vacuum stairs chair typical leaf squirrel later happy identify toe water",
-  "https://rinkeby.infura.io/v3/4ca5fec194be42278869da6855d2aa9e",
+  config.get("hdwallet"),
+  config.get("infuraurl"),
 );
 
 const web3 = new Web3(provider);
