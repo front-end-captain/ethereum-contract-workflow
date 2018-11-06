@@ -2,7 +2,7 @@
 
 ## 众筹智能合约
 
-> 智能合约管理的基本数据单元是项目，指资金募集方可以创建和管理供投资者可以参与的项目，而项目需要具备基本属性，也需要存储项目生命周期中的各种数据。实战中会使用 *Project* 来命名项目智能合约。
+> 智能合约管理的基本数据单元是项目，指资金募集方可以创建和管理供投资者可以参与的项目，而项目需要具备基本属性，也需要存储项目生命周期中的各种数据。实战中会使用 _Project_ 来命名项目智能合约。
 
 ### 数据结构
 
@@ -21,7 +21,7 @@
 
 ### 状态流转
 
-+ **创建项目**  创建项目时需要指定项目名称，基本投资规则（投资上下限，融资目标），自动记录项目的所有者；
+- **创建项目** 创建项目时需要指定项目名称，基本投资规则（投资上下限，融资目标），自动记录项目的所有者；
 
   ``` solidity
   ProjectList.createProject(string description, uint minInvest, uint maxInvest, uint goal)
@@ -51,13 +51,14 @@
   Project.finishPayment(uint index);
   ```
 
-+ **获取项目的概览信息** 项目名称，投资下限，投资上限，融资目标金额，账户余额(已募集资金)，参与投资人数，资金支出请求数量，项目发起人
+- **获取项目的概览信息** 项目名称，投资下限，投资上限，融资目标金额，账户余额(已募集资金)，参与投资人数，资金支出请求数量，项目发起人
 
   ``` solidity
   Project.getProjectSummary() returns (string description, uint, minInvest, uint maxInvest, uint goal, uint balance, uint investCount, uint paymentAmount, address owner);
   ```
 
 ## 众筹 DApp
+
 ### 路由规划
 
 | URL                                | 描述                 |
@@ -132,7 +133,78 @@ approvePayment(number paymentIndex);
 
 #### 完成资金划转
 
-``` javascript
+```javascript
 finishPayment(number paymentIndex);
 ```
 
+#### web 端一键化登录 DApp
+
+front-end TODO:
+
+- 检查用户是否在手机端浏览器访问站点
+
+- 用户进入站点后，检查用户浏览器是否安装了 MetaMask 插件，若没有安装，提示用户安装
+
+  ``` javascript
+  if (window.web3 === "undefined") {
+    console.log("You browser is not installed MetaMask");
+  }
+  ```
+
+- 检查用户是否登录了 MetaMask ，若没有登录，提示进行登录
+
+  ``` javascript
+  if (!web3.eth.coinbase) {
+  	console.log("Please login first");
+  }
+  ```
+
+- 检查用户 MetaMask 插件的网络是否链接，是否在主网，若有异常，提示用户检查网络
+
+  ``` javascript
+  we3.eth.net.getId((id) => {
+    switch (id) {
+      case "1":
+        console.log('This is mainnet');
+        return;
+      case "2":
+        console.log('This is the deprecated Morden test network.');
+        return;
+      case "3":
+        console.log('This is the ropsten test network.');
+        break;
+      case "4":
+        console.log('This is the Rinkeby test network.');
+        return;
+      case "42":
+        console.log('This is the Kovan test network.');
+        return;
+      default:
+        console.log('This is an unknown network.');
+        return;
+    }
+  })
+  ```
+
+- 用户登录 MetaMask 并在主网上，项服务端发送请求并携带用户钱包地址（publicAddress）检查用户是否注册，若注册则返回 nonce，否则用户填写邮箱和昵称进行注册
+
+- 用户登录 MetaMask 并在主网上，向服务端发送请求并携带用户钱包账户地址（publicAddress）,获取 nonce
+
+- 弹出 MetaMask 窗口，根据 publicAddress 和 nonce 让用户对 nonce 进行签名，在回调函数中将获得用户的签名
+
+- 用户签名后，将 publicAddress 和 signature 发送给服务端进行签名验证，验证成功后将返回 token
+
+- 将上面的 token 在客户端进行存储，在后续的与服务端进行交互都将带上这个 token
+
+- MetaMask 退出后，页面同样进行退出
+
+- 用户切换账号 采取相应的措施
+
+
+back-end TODO:
+- 修改用户模型
+
+  > 用户模型需要增加两个 publicAddress 和 nonce
+- 生成随机数 nonce，增加一个接口供前端调用来获取随机数
+- 签名验证，分发 token
+- 更新 nonce
