@@ -1,3 +1,4 @@
+require("@babel/register");
 const Koa = require("koa");
 const KoaBody = require("koa-body");
 const Logger = require("koa-morgan");
@@ -5,6 +6,7 @@ const Cors = require("koa-cors");
 const Chalk = require("chalk");
 const HandleErrorMiddleware = require("./Middleware/HandleError.js");
 const ConnectDBMiddleware = require("./Middleware/ConnectDB.js");
+const AuthenticationMiddleware = require("./Middleware/Authentication.js");
 const router = require("./Route/index.js");
 
 const PORT = 3000;
@@ -18,6 +20,7 @@ app
   .use(KoaBody())
   .use(HandleErrorMiddleware())
   .use(Cors())
+  .use(AuthenticationMiddleware())
   .use(router.routes())
   .use(router.allowedMethods())
 

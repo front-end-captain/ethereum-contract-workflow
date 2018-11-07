@@ -7,6 +7,7 @@ class Project {
   constructor() {
     Project.projectListContractInstance = createProjectListContractInstance();
   }
+
   async projectsList(ctx) {
     const addressList = await Project.projectListContractInstance.methods.getProjects().call();
     const summaryList = await Promise.all(

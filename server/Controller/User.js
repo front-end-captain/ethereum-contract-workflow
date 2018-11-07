@@ -1,8 +1,8 @@
 const uuidv1 = require("uuid/v1");
 const web3 = require("./../../libs/web3.js");
-const { User, Log } = require("./../Model/index.js");
+const { User, Log, Token } = require("./../Model/index.js");
 const TokenUtil = require("./../Utils/Token.js");
-const { handleSignature, createSignatureMessage } = require("./../Utils/Signature.js");
+const { verifySignature, createSignatureMessage } = require("./../Utils/Signature.js");
 
 class UserController {
   // GET /user/nonce/:publicAddress
@@ -105,7 +105,7 @@ class UserController {
     }
 
     const { nonce } = user;
-    const signaturedAddress = handleSignature(signature, nonce);
+    const signaturedAddress = verifySignature(signature, nonce);
 
     if (signaturedAddress.toLowerCase() !== publicAddress) {
       ctx.status = 401;
@@ -113,8 +113,19 @@ class UserController {
       return;
     }
 
+    const targetUserInToken = await Token.findOne({ id: user.id });
     const token = TokenUtil.createToken();
 
+    if (targetUserInToken) {
+      await Token.updateOne({ id: user.id }, { token });
+    } else {
+      const tokenDoc = new Token({
+        id: user.id,
+        token,
+      });
+      await tokenDoc.save();
+    }
+    
     // 更新 nonce
     await User.updateOne({ publicAddress }, { nonce: Math.floor(Math.random() * 1000000) });
 
