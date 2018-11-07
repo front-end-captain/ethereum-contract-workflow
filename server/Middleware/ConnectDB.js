@@ -3,10 +3,15 @@ const chalk = require("chalk");
 const DBConfig = require("../Config/DBConfig.js");
 const { Admin } = require("./../Model/index.js");
 
+mongoose.set('bufferCommands', false);
+
 async function connectDB() {
   const options = {
     useNewUrlParser: true,
     useCreateIndex: true,
+    bufferMaxEntries: 0,
+    autoReconnect: true,
+    poolSize: 5,
   };
 
   const { user, pass, host, port, db } = DBConfig;

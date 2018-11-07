@@ -1,6 +1,6 @@
 const uuidv1 = require("uuid/v1");
 const web3 = require("./../../libs/web3.js");
-const { User } = require("./../Model/index.js");
+const { User, Log } = require("./../Model/index.js");
 const TokenUtil = require("./../Utils/Token.js");
 const { handleSignature, createSignatureMessage } = require("./../Utils/Signature.js");
 
@@ -15,17 +15,27 @@ class UserController {
     }
 
     const user = await User.findOne({ publicAddress });
-    if (user) {
-      const { nonce } = user;
-      ctx.body = {
-        status: 1,
-        message: "success",
-        data: { nonce, signatureMessage: createSignatureMessage(nonce) },
-      };
+    if (!user) {
+      ctx.body = { status: -1, message: "user not found, go register" };
       return;
     }
 
-    ctx.body = { status: -1, message: "user not found, go register" }
+    const { nonce } = user;
+
+    const log = new Log({
+      type: 1,
+      description: "user get nonce success",
+      log: `user get nonce success, id: ${user.id}, name: ${
+        user.name
+      }, nonce: ${nonce}, publicAddress: ${publicAddress}`,
+    });
+    await log.save();
+
+    ctx.body = {
+      status: 1,
+      message: "success",
+      data: { nonce, signatureMessage: createSignatureMessage(nonce) },
+    };
   }
 
   async register(ctx) {
@@ -50,15 +60,23 @@ class UserController {
     }
 
     const nonce = Math.floor(Math.random() * 1000000);
+    const userId = uuidv1();
 
     const newUser = new User({
-      id: uuidv1(),
+      id: userId,
       email,
       name,
       publicAddress,
       nonce,
     });
     await newUser.save();
+
+    const log = new Log({
+      type: 1,
+      description: "user register success",
+      log: `user registered success, id: ${userId}, name: ${name}, publicAddress: ${publicAddress}, nonce: ${nonce}`,
+    });
+    await log.save();
 
     const signatureMessage = createSignatureMessage(nonce);
     ctx.body = { status: 1, message: "success", data: { nonce, signatureMessage } };
@@ -100,15 +118,24 @@ class UserController {
     // 更新 nonce
     await User.updateOne({ publicAddress }, { nonce: Math.floor(Math.random() * 1000000) });
 
+    const log = new Log({
+      type: 1,
+      description: "user authentication success",
+      log: `user authentication success id: ${user.id}, name: ${
+        user.name
+      }, publicAddress: ${publicAddress}, email: ${user.email}`,
+    });
+    await log.save();
+
     ctx.body = {
       status: 1,
       message: "success",
       data: {
-        id: user._doc.id,
-        nonce: user._doc.nonce,
-        publicAddress: user._doc.publicAddress,
-        name: user._doc.name,
-        email: user._doc.email,
+        id: user.id,
+        nonce: user.nonce,
+        publicAddress: user.publicAddress,
+        name: user.name,
+        email: user.email,
         token,
       },
     };
